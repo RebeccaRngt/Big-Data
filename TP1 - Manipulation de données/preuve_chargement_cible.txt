@@ -1,0 +1,7 @@
+Patients : 17498 (OK)
+Groupes : 1686 (OK)
+Medicaments : 15883 (OK)
+Presentations : 49 (OK)
+Substances : 14874 (OK)
+Composer : 27674 (OK)
+Prescrire : 96016 (OK)

@@ -1,0 +1,141 @@
+RÈGLES DE CORRESPONDANCE ET DE CHARGEMENT
+
+
+1. TABLE : Patients
+
+- Schéma cible :
+  Patients(idfPatient, prenom, nom, age, genre, mail)
+
+- Fichier source :
+  Healthcare_data.csv (séparateur : ',', encodage : UTF-8)
+
+- Correspondance des attributs :
+  - idfPatient = Identifiant séquentiel de 1 à N
+  - prenom = first_name
+  - nom = last_name
+  - age = age
+  - genre = gender
+  - mail = email
+
+- Méthode de chargement choisie : PYTHON
+  J'ai choisi Python ici parce que les colonnes du CSV d'origine sont en anglais
+  (first_name, last_name, etc.). Avec un DataFrame pandas, c'est beaucoup plus
+  simple et rapide de renommer proprement les champs, de vérifier que les âges
+  sont bien des entiers et de créer une clé primaire propre de 1 à N avant
+  d'insérer le tout dans la base
+
+
+2. TABLE : Groupes
+
+- Schéma cible :
+  Groupes(idfGroupe, libelle)
+
+- Fichier source :
+  CIS_GENER_bdpm.txt (séparateur : '\t', encodage : ISO-8859-1)
+
+- Correspondance des attributs :
+  - idfGroupe = idfGroupe
+  - libelle = libelle
+
+- Méthode de chargement choisie : SQL
+  Dans le fichier d'origine, chaque groupe générique apparaît plusieurs fois car
+  il est répété pour chaque médicament du groupe. Un simple SELECT DISTINCT en
+  SQL est suffisant pour retirer les doublons et avoir plus qu'une seule ligne par groupe
+
+
+
+3. TABLE : Medicaments
+
+- Schéma cible :
+  Medicaments(idfMedic, denomination, forme, statutAMM, dateAMM, noautorisation, idfGroupe)
+
+- Fichier source :
+  CIS_bdpm.txt croisé avec CIS_GENER_bdpm.txt (séparateur : '\t', encodage : ISO-8859-1)
+
+- Correspondance des attributs :
+  - idfMedic = codeCIS
+  - denomination = denomination
+  - forme = forme
+  - statutAMM = statutAMM
+  - dateAMM = dateAMM
+  - noautorisation = numero_autorisation_europeenne
+  - idfGroupe = idfGroupe
+
+- Méthode de chargement choisie : SQL
+  J'ai utilisé une requête SQL avec un LEFT JOIN entre la table des médicaments
+  et celle des génériques sur le code CIS ce qui est important car tous
+  les médicaments ne font pas partie d'un groupe générique
+
+
+
+4. TABLE : Presentations
+
+- Schéma cible :
+  Presentations(idfPresentation, libelle, statutADM, dateCom, tauxRembt, prixMedic, prixPublic, idfMedic)
+
+- Fichier source :
+  CIS_CIP_bdpm.txt (séparateur : '\t', encodage : ISO-8859-1)
+
+- Correspondance des attributs :
+  - idfPresentation = codeCIP7
+  - libelle = libelle
+  - statutADM = statutADM
+  - dateCom = dateCom
+  - tauxRembt = tauxRembt
+  - prixMedic = prixMedic
+  - prixPublic = prixPublic
+  - idfMedic = codeCIS
+
+- Méthode de chargement choisie : SQL
+  Le fichier d'origine contient des prix écrits avec une virgule à la française
+  (ex: 2,50) et des pourcentages avec le symbole '%'. Au lieu de tout charger en
+  mémoire Python, avec les fonctions SQL REPLACE() et CAST(... AS REAL) on peut
+  transformer ces textes en vrais nombres directement pendant l'insertion
+
+
+
+5. TABLES : Substances & Composer
+
+- Schéma cible :
+  Substances(idfSubstance, denomination, dosage, refDosage)
+  Composer(idfMedic, idfSubstance)
+
+- Fichier source :
+  CIS_COMPO_bdpm.txt (séparateur : '\t', encodage : ISO-8859-1)
+
+- Correspondance des attributs :
+  - idfSubstance = Numéro unique généré
+  - denomination = denomination
+  - dosage = dosage
+  - refDosage = refDosage
+  - idfMedic = codeCIS
+
+- Méthode de chargement choisie : PYTHON
+  Dans le fichier d'origine, il n'y a pas d'identifiant unique pour les substances,
+  et une même molécule peut composer plein de médicaments différents. J'ai donc
+  utilisé pandas pour extraire les combinaisons uniques (denomination, dosage,
+  refDosage) avec drop_duplicates(), leur créer un identifiant, puis faire un merge
+  pour reconstruire la table de liaison Composer. C'est beaucoup plus simple
+  à gérer en Python qu'en SQL
+
+
+6. TABLE : Prescrire
+
+- Schéma cible :
+  Prescrire(idfPatient, idfMedic, date_prise, posologie, duree)
+
+- Fichier source :
+  Aucun (Génération synthétique demandée dans les consignes du TP)
+
+- Correspondance et règles de génération :
+  - idfPatient = Identifiant tiré depuis la table Patients
+  - idfMedic = Entre 1 et 10 médicaments tirés au sort dans Medicaments
+  - date_prise = Date aléatoire entre le 01/01/2025 et aujourd'hui
+  - posologie = Entier aléatoire entre 1 et 5
+  - duree = Entier aléatoire entre 1 et 30 jours
+
+- Méthode de chargement choisie : PYTHON
+  Avec SQLite ne peut pas faire de génération avec des boucles ou des
+  tirages aléatoires sans remise. Il faut Le module random de Python qui permet
+  de tirer entre 1 et 10 médicaments par patient,
+  générer des dates cohérentes et des posologies de 1 à 5

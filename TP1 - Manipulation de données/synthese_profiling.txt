@@ -1,0 +1,19 @@
+Analyse des données après intégration (Rapport de profilage)
+
+1. Vue d'ensemble
+Le jeu de données extrait pour le profilage compte 96 016 lignes et 8 colonnes, pour un poids en mémoire d'environ 5,9 Mo
+Il croise les données des tables Patients, Medicaments, Prescrire et Presentations
+
+2. Variables principales
+- Âge : les patients ont entre 1 et 90 ans, avec une moyenne autour de 45 ans et demi. Il n'y a aucune valeur manquante ni d'âge impossible
+- Genre : trois valeurs sont présentes (male, female, other), le champ est rempli à 100 %
+- Posologie : les valeurs vont de 1 à 5 avec une moyenne de 3. Les 5 valeurs sont réparties équitablement
+- Durée : les durées vont de 1 à 30 jours (moyenne d'environ 15 jours)
+- Date de prise : les dates sont bien réparties sur la période 2025-2026
+- Forme : 369 formes différentes ressortent, les plus fréquentes sont les comprimés, poudres, solutions et injectables
+
+3. Valeurs manquantes
+Le rapport indique 25 % de cases vides au total
+Cela vient uniquement des deux colonnes tauxRembt et prixPublic qui sont vides sur cet extrait
+C'est normal : lors de la jointure avec la table Presentations, certains médicaments prescrits correspondent à des produits hospitaliers ou sans tarif public en officine, ce qui laisse ces deux champs à NULL
+Pour toutes les autres colonnes (patients, prescriptions, formes), le taux de remplissage est de 100 %
